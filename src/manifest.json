@@ -1,0 +1,23 @@
+{
+  "compatibleVersion": 3,
+  "bundleVersion": 1,
+  "commands": [
+    {
+      "name": "my-command",
+      "identifier": "sketch-tokens-exporter.my-command-identifier",
+      "script": "./my-command.js",
+      "handlers": {
+        "run": "onRun",
+        "actions": {
+          "Shutdown": "onShutdown"
+        }
+      }
+    }
+  ],
+  "menu": {
+    "title": "sketch-tokens-exporter",
+    "items": [
+      "sketch-tokens-exporter.my-command-identifier"
+    ]
+  }
+}
