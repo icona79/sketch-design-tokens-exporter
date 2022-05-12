@@ -1,6 +1,6 @@
 # Sketch Design Tokens Exporter
 
-With this plugin you can export to your desktop a `design-tokens.jason` file compatible with Amazon Style Dictionary.
+With this plugin you can export to your desktop a `design-tokens.json` file compatible with Amazon Style Dictionary.
 
 The plugin extracts from your current opened Sketch document all your Color Variable, Layer Styles and Text Styles.
 

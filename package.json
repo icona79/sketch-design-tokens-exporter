@@ -1,5 +1,6 @@
 {
     "name": "sketch-tokens-exporter",
+    "description": "With this plugin you can export to your desktop a design-tokens.json file compatible with Amazon Style Dictionary.",
     "version": "0.1.0",
     "engines": {
         "sketch": ">=3.0"
