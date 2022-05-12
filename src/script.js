@@ -1,9 +1,10 @@
-import BrowserWindow from "sketch-module-web-view";
-import { getWebview } from "sketch-module-web-view/remote";
-import UI from "sketch/ui";
+// import BrowserWindow from "sketch-module-web-view";
+// import { getWebview } from "sketch-module-web-view/remote";
+// import UI from "sketch/ui";
 import rgbHex from "rgb-hex";
 import hexRgb from "hex-rgb";
 import { isDeepStrictEqual } from "util";
+const { isNativeObject } = require("util");
 
 import { resolve } from "path";
 const fs = require("@skpm/fs");
@@ -44,12 +45,14 @@ const imageFillType = ["tile", "fill", "stretch", "fit"];
 
 // #region Sketch Items
 var sketch = require("sketch");
+var Image = require("sketch/dom").Image;
 
 // Document variables
 var doc = context.document;
 var document = sketch.getSelectedDocument();
 var artboard = sketch.Artboard;
 var data = document.sketchObject.documentData();
+var image = sketch.Image;
 // #endregion
 
 let designTokensList = {};
@@ -302,6 +305,7 @@ export default function() {
                     // console.log(fill.image)
                     let patternType = fill.pattern.patternType;
                     let patternScale = fill.pattern.tileScale;
+                    let patternImage = fill.pattern.image.nsimage;
 
                     styleColors["background-position"] = { value: "center" };
                     if (patternType === "tile" && patternScale !== 1) {
@@ -323,7 +327,7 @@ export default function() {
 
                     // TODO Find Image name!!!
                     styleColors["background-image"] = {
-                        value: "Image",
+                        value: patternImage,
                     };
                 }
                 // #endregion
@@ -777,22 +781,67 @@ export default function() {
             return result;
         }, {});
 
-    // 2. Create the Object
-    let colorsObj = { colors: colorTokens };
-    let gradientObj = { gradients: gradientStyles };
-    let shadowsObj = { shadows: shadowStyles };
-    let innerShadowsObj = { "inner-shadows": innerShadowStyles };
-    let fontsObj = { "font-families": fonts };
-    let fontSizeObj = { "font-sizes": fontSize };
-    let fontWeightObj = { "font-weights": fontWeight };
-    let fontAlignmentObj = { "text-alignments": fontAlignment };
+    // 2. Create the Object to export the JSON list
+    let colorsObj = {};
+    if (isEmptyObj(colorTokens) === false) {
+        colorsObj = { colors: colorTokens };
+    }
+    let gradientObj = {};
+    if (isEmptyObj(gradientStyles) === false) {
+        gradientObj = { gradients: gradientStyles };
+    }
+    let shadowsObj = {};
+    if (isEmptyObj(shadowStyles) === false) {
+        shadowsObj = { shadows: shadowStyles };
+    }
+    let innerShadowsObj = {};
+    if (isEmptyObj(innerShadowStyles) === false) {
+        innerShadowsObj = { "inner-shadows": innerShadowStyles };
+    }
+    let fontsObj = {};
+    if (isEmptyObj(fonts) === false) {
+        fontsObj = { "font-families": fonts };
+    }
+    let fontSizeObj = {};
+    if (isEmptyObj(fontSize) === false) {
+        fontSizeObj = { "font-sizes": fontSize };
+    }
+    let fontWeightObj = {};
+    if (isEmptyObj(fontWeight) === false) {
+        fontWeightObj = { "font-weights": fontWeight };
+    }
+    let fontAlignmentObj = {};
+    if (isEmptyObj(fontAlignment) === false) {
+        fontAlignmentObj = { "text-alignments": fontAlignment };
+    }
     let fontVAlignmentObj = {};
+    // if (isEmptyObj(fontVAlignment) === false) {
+    //     fontVAlignmentObj = { "text-vertical-alignments": fontVAlignment };
+    // }
     let fontKerningObj = {};
+    // if (isEmptyObj(fontKerning) === false) {
+    //     fontKerningObj = { "text-kernings": fontKerning };
+    // }
     let fontLineHeightObj = {};
+    // if (isEmptyObj(fontLineHeight) === false) {
+    //     fontLineHeightObj = { "text-line-heights": fontLineHeight };
+    // }
     let fontParagraphSpacingObj = {};
+    // if (isEmptyObj(fontParagraphSpacing) === false) {
+    //     fontParagraphSpacingObj = { "text-paragraphs": fontParagraphSpacing };
+    // }
     let textTransformObj = {};
+    if (isEmptyObj(textTransform) === false) {
+        textTransformObj = { "text-transforms": textTransform };
+    }
     let fontAxesObj = {};
-    let borderPositionsObj = { "border-positions": borderPositions };
+    if (isEmptyObj(fontAxes) === false) {
+        fontAxesObj = { "text-axes": fontAxes };
+    }
+    let borderPositionsObj = {};
+    if (isEmptyObj(borderPositions) === false) {
+        borderPositionsObj = { "border-positions": borderPositions };
+    }
     if (textStylesComplete) {
         fontKerningObj = { "text-kernings": fontKerning };
         fontLineHeightObj = { "text-line-heights": fontLineHeight };
@@ -1059,15 +1108,17 @@ function setShadowDetails(object, currentItem, shadowType = "") {
 }
 
 // Set Gradients
-function setGradientDetails(object, currentItem, type = 0, prefix = "") {
+function setGradientDetails(object, currentItem, type = "Linear", prefix = "") {
     let currentObject = {};
     let fill = currentItem;
 
     if (type === "Radial") {
         if (fill.gradient.aspectRatio > 0) {
-            object["type"] = gradientCircleType[1];
+            currentObject["type"] = gradientCircleType[1];
+            currentObject["aspect-ratio"] =
+                fill.gradient.aspectRatio.toString();
         } else {
-            object["type"] = gradientCircleType[0];
+            currentObject["type"] = gradientCircleType[0];
         }
     }
     let degree = Math.round(
@@ -1079,6 +1130,10 @@ function setGradientDetails(object, currentItem, type = 0, prefix = "") {
         )
     ).toString();
     currentObject["degree"] = { value: degree };
+    currentObject["from-x"] = { value: fill.gradient.from.x.toString() };
+    currentObject["from-y"] = { value: fill.gradient.from.y.toString() };
+    currentObject["to-x"] = { value: fill.gradient.to.x.toString() };
+    currentObject["to-y"] = { value: fill.gradient.to.y.toString() };
 
     let stops = fill.gradient.stops;
     let stopCounter = 1;
@@ -1139,4 +1194,12 @@ function hexAToRGBA(hex) {
     a = +(a / 255).toFixed(3);
 
     return "rgba(" + +r + ", " + +g + ", " + +b + ", " + a + ")";
+}
+
+function isEmptyObj(object) {
+    let isEmpty = false;
+    if (Object.keys(object).length === 0) {
+        isEmpty = true;
+    }
+    return isEmpty;
 }
