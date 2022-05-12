@@ -5,6 +5,12 @@ import rgbHex from "rgb-hex";
 import hexRgb from "hex-rgb";
 import { isDeepStrictEqual } from "util";
 
+import { resolve } from "path";
+const fs = require("@skpm/fs");
+const os = require("os");
+const path = require("path");
+const desktopDir = path.join(os.homedir(), "Desktop");
+
 // import config from "./config.json";
 
 // General variables
@@ -826,30 +832,16 @@ export default function() {
         delete designTokensList[keyToDelete];
     }
 
-    if (Object.keys(designTokensList).length > 0) {
-        let json = JSON.stringify(designTokensList, null, 1);
-
-        let pasteboard = NSPasteboard.generalPasteboard();
-        pasteboard.clearContents();
-        pasteboard.setString_forType(json, NSPasteboardTypeString);
-
-        sketch.UI.message("📋 Data copied to clipboard.");
-    } else {
-        sketch.UI.message("☝️ No font families found in your text styles.");
-    }
-
+    let json = JSON.stringify(designTokensList, null, 2);
     // Finally, store the color information in a `colors.json` file:
-    // fs.writeFile(
-    //   desktopDir + '/design-tokens.json',
-    //   JSON.stringify(designTokensList, null, 2),
-    //   err => {
-    //     if (err) throw err
-    //     console.log('✅ Design Tokens extraction complete')
-    //   }
-    // )
-
-    // console.log("Done");
-
+    try {
+        fs.writeFileSync(desktopDir + "/design-tokens.json", json);
+        sketch.UI.message("✅ Design Tokens extraction complete");
+    } catch (error) {
+        sketch.UI.message(
+            "⛔️ There was an error writing your file on Desktop"
+        );
+    }
     // sketch.UI.message("It's alive 🙌");
 }
 
