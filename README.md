@@ -52,4 +52,4 @@ _This plugin was created using `skpm`. For a detailed explanation on how things 
 ## Notes
 
 This plugin is a port of a File Format Design Tokens exporter, which permits you to perform the same action from any OS (by having a downloaded Sketch document available oon your Computer).
-The File Format project will be soon available.
+The File Format project is available [here](https://github.com/icona79/sketch-design-tokens-exporter-FF).
