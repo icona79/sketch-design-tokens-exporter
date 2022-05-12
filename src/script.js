@@ -305,7 +305,9 @@ export default function() {
                     // console.log(fill.image)
                     let patternType = fill.pattern.patternType;
                     let patternScale = fill.pattern.tileScale;
-                    let patternImage = fill.pattern.image.nsimage;
+                    let patternImage = fill._object
+                        .image()
+                        .treeAsDictionary().sha1;
 
                     styleColors["background-position"] = { value: "center" };
                     if (patternType === "tile" && patternScale !== 1) {

@@ -16,5 +16,6 @@
         "title": "sketch-tokens-exporter",
         "items": ["ste-script"],
         "isRoot": true
-    }
+    },
+    "icon": "icon.png"
 }
