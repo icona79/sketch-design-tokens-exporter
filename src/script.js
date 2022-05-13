@@ -1,10 +1,6 @@
-// import BrowserWindow from "sketch-module-web-view";
-// import { getWebview } from "sketch-module-web-view/remote";
-// import UI from "sketch/ui";
 import rgbHex from "rgb-hex";
 import hexRgb from "hex-rgb";
 import { isDeepStrictEqual } from "util";
-const { isNativeObject } = require("util");
 
 import { resolve } from "path";
 const fs = require("@skpm/fs");
@@ -893,7 +889,6 @@ export default function() {
             "⛔️ There was an error writing your file on Desktop"
         );
     }
-    // sketch.UI.message("It's alive 🙌");
 }
 
 // **************************************
