@@ -208,8 +208,7 @@ export default function() {
                 currentGradient = setGradientDetails(
                     currentGradient,
                     fill,
-                    gradientType,
-                    variablePrefix
+                    gradientType
                 );
                 let gradientStylesCheck = {};
                 createCouples(
@@ -290,8 +289,7 @@ export default function() {
                     currentGradient = setGradientDetails(
                         currentGradient,
                         fill,
-                        gradientType,
-                        variablePrefix
+                        gradientType
                     );
 
                     let currentGradientName =
@@ -974,7 +972,11 @@ export default function() {
 
 // **************************************
 // Script functions
+// **************************************
 
+/**
+ * Check if a copule key: value already exists
+ */
 function checkToken(object, currentItem) {
     let check = false;
     if (Object.keys(object).length > 0) {
@@ -985,6 +987,9 @@ function checkToken(object, currentItem) {
     return check;
 }
 
+/**
+ * Check if a copule key: value already exists in color tokens
+ */
 function checkColor(array, currentItem) {
     for (let i = 0; i < array.length; i++) {
         if (isDeepStrictEqual(array[i][1], currentItem)) {
@@ -993,6 +998,9 @@ function checkColor(array, currentItem) {
     }
 }
 
+/**
+ * Get the color available in the token list
+ */
 function getColor(array, currentItem) {
     for (let i = 0; i < array.length; i++) {
         if (isDeepStrictEqual(array[i][1], currentItem)) {
@@ -1001,6 +1009,11 @@ function getColor(array, currentItem) {
     }
 }
 
+/**
+ * Set the current color available in the token list
+ * the type parameter permit to specify if we want an export
+ * with hex or rgba colors
+ */
 function setColor(swatch, type = "hex") {
     if (type === "hex") {
         let swatchColorHEX = swatch;
@@ -1012,6 +1025,9 @@ function setColor(swatch, type = "hex") {
     }
 }
 
+/**
+ * Check if a copule key: value already exists in shadow tokens
+ */
 function checkShadows(array, currentItem) {
     for (let i = 0; i < array.length; i++) {
         if (isDeepStrictEqual(array[i][1], currentItem)) {
@@ -1020,6 +1036,9 @@ function checkShadows(array, currentItem) {
     }
 }
 
+/**
+ * Get the shadow available in the token list
+ */
 function getShadow(array, currentItem) {
     for (let i = 0; i < array.length; i++) {
         if (isDeepStrictEqual(array[i][1], currentItem)) {
@@ -1028,6 +1047,9 @@ function getShadow(array, currentItem) {
     }
 }
 
+/**
+ * Get the font size available in the token list
+ */
 function getFontSize(array, currentItem) {
     for (let i = 0; i < array.length; i++) {
         if (isDeepStrictEqual(array[i][1], currentItem)) {
@@ -1036,6 +1058,9 @@ function getFontSize(array, currentItem) {
     }
 }
 
+/**
+ * Check if a token is available in deep objects
+ */
 function checkTokenValue(object, currentItem) {
     result = "";
     let check = false;
@@ -1054,43 +1079,15 @@ function checkTokenValue(object, currentItem) {
     }
 }
 
-function getKeyByValue(object, value, discard = "") {
-    if (typeof value === "string") {
-        value = value.replace(discard, "");
-    }
-    return Object.keys(object).find((key) => object[key] === value);
-}
-
 /**
- * Returns the key of an Object recurively deeping into nested objects
+ * Create a token couple
+ * Creates a token couple if not already in the list of available couples
+ * Some optional parameters permit to add some specific requirements
+ * for couple keys:
+ *   suffixNeeded: 0=false, 1=true)
+ *   name: keyName
+ *   i = incremental number (for automatically generated couples)
  */
-function getKeyByValueRecursive(object, search, discard = "", checkValue = 0) {
-    result = "";
-    let objectLength = Object.keys(object).length;
-    if (checkValue === 1) {
-        console.log(search);
-    }
-    if (objectLength > 0) {
-        for (let i in object) {
-            let key = i;
-            let value = object[i];
-
-            if (checkValue === 1) {
-                console.log(key);
-                console.log(value);
-            }
-
-            if (isDeepStrictEqual(value, search)) {
-                result = key;
-            }
-
-            if (object[i] !== null && typeof object[i] == "object") {
-                getKeyByValueRecursive(object[i], search, discard);
-            }
-        }
-    }
-}
-
 function createCouples(
     object,
     currentItem,
@@ -1122,6 +1119,14 @@ function createCouples(
     }
 }
 
+/**
+ * Create a token couple
+ * Creates a token couple if not already in the list of available couples
+ * Some optional parameters permit to add some specific requirements
+ * for couple keys:
+ *   key: force the keyName
+ *   prefix: add a prefix to value
+ */
 function setStyleToken(object, currentItem, key = "", prefix = "") {
     let token = {};
     if (checkToken(object, currentItem)) {
@@ -1132,39 +1137,14 @@ function setStyleToken(object, currentItem, key = "", prefix = "") {
     return token;
 }
 
-/**
- * Generate nested Objects by splitting a sting
- * Usages:
- * createNestedObject(window, ['shapes', 'circle'])
- *   Now window.shapes.circle is an empty object, ready to be used.
- * var object = {} // Works with any object other that window too
- * createNestedObject(object, ['shapes', 'rectangle', 'width'], 300)
- *   Now we have: object.shapes.rectangle.width === 300
- * createNestedObject(object, 'shapes.rectangle.height'.split('.'), 400)
- *   Now we have: object.shapes.rectangle.height === 400
- */
-function createNestedObject(object, keys, value) {
-    // If a value is given, remove the last name and keep it for later:
-    var lastKey = arguments.length === 3 ? keys.pop() : false;
-    // Walk the hierarchy, creating new objects where needed.
-    // If the lastKey was removed, then the last object is not set yet:
-    for (var i = 0; i < keys.length; i++) {
-        object = object[keys[i]] = object[keys[i]] || {};
-    }
-
-    // If a value was given, set it to the last name:
-    if (lastKey) object = object[lastKey] = value;
-
-    // Return the last object in the hierarchy:
-    return object;
-}
-
-function getKey(object, val) {
-    Object.keys(object).find((key) => object[key] === val);
-}
-
+// **************************************
 // Internal functions
-// Set Shadows
+// **************************************
+
+/**
+ * Set the shadows parameters
+ * the parameter shadowType permit to define inner or outer shadows
+ */
 function setShadowDetails(object, currentItem, shadowType = "") {
     let color = currentItem.color;
     let currentColor = setColor(color, "rgba");
@@ -1186,8 +1166,12 @@ function setShadowDetails(object, currentItem, shadowType = "") {
     return object;
 }
 
-// Set Gradients
-function setGradientDetails(object, currentItem, type = "Linear", prefix = "") {
+/**
+ * Set the shadows parameters
+ * parameters:
+ * type: define the gradient type (default: linear)
+ */
+function setGradientDetails(object, currentItem, type = "Linear") {
     let currentObject = {};
     let fill = currentItem;
 
@@ -1247,43 +1231,6 @@ function setGradientDetails(object, currentItem, type = "Linear", prefix = "") {
     return currentObject;
 }
 
-function getAngleDeg(ax, ay, bx, by) {
-    var angleRad = Math.atan((ay - by) / (ax - bx));
-    var angleDeg = (angleRad * 180) / Math.PI;
-
-    return angleDeg;
-}
-
-function hexAToRGBA(hex) {
-    let r = 0,
-        g = 0,
-        b = 0,
-        a = 1;
-
-    if (hex.length == 5) {
-        r = "0x" + hex[1] + hex[1];
-        g = "0x" + hex[2] + hex[2];
-        b = "0x" + hex[3] + hex[3];
-        a = "0x" + hex[4] + hex[4];
-    } else if (hex.length == 9) {
-        r = "0x" + hex[1] + hex[2];
-        g = "0x" + hex[3] + hex[4];
-        b = "0x" + hex[5] + hex[6];
-        a = "0x" + hex[7] + hex[8];
-    }
-    a = +(a / 255).toFixed(3);
-
-    return "rgba(" + +r + ", " + +g + ", " + +b + ", " + a + ")";
-}
-
-function isEmptyObj(object) {
-    let isEmpty = false;
-    if (Object.keys(object).length === 0) {
-        isEmpty = true;
-    }
-    return isEmpty;
-}
-
 /**
  * Set the value of the referenced Token in the format of Amazon
  * Style Dictionary.
@@ -1314,6 +1261,47 @@ function setStyleDictionaryVariable(currentVariable) {
     }
 }
 
+// **************************************
+// Color functions
+// **************************************
+
+function getAngleDeg(ax, ay, bx, by) {
+    var angleRad = Math.atan((ay - by) / (ax - bx));
+    var angleDeg = (angleRad * 180) / Math.PI;
+
+    return angleDeg;
+}
+
+function hexAToRGBA(hex) {
+    let r = 0,
+        g = 0,
+        b = 0,
+        a = 1;
+
+    if (hex.length == 5) {
+        r = "0x" + hex[1] + hex[1];
+        g = "0x" + hex[2] + hex[2];
+        b = "0x" + hex[3] + hex[3];
+        a = "0x" + hex[4] + hex[4];
+    } else if (hex.length == 9) {
+        r = "0x" + hex[1] + hex[2];
+        g = "0x" + hex[3] + hex[4];
+        b = "0x" + hex[5] + hex[6];
+        a = "0x" + hex[7] + hex[8];
+    }
+    a = +(a / 255).toFixed(3);
+
+    return "rgba(" + +r + ", " + +g + ", " + +b + ", " + a + ")";
+}
+
+// **************************************
+// Object functions
+// **************************************
+
+/**
+ * Return true if item exist in a
+ * multidimentional array
+ */
 function isItemInArray(array, item) {
     for (var i = 0; i < array.length; i++) {
         // This if statement depends on the format of your array
@@ -1324,6 +1312,9 @@ function isItemInArray(array, item) {
     return false; // Not found
 }
 
+/**
+ * Set all keys and values to LowerCase in object
+ */
 function objectectLowerCase(object) {
     // Helper function for detection objects
     const isObject = (obj) =>
@@ -1345,6 +1336,9 @@ function objectectLowerCase(object) {
     return newObject;
 }
 
+/**
+ * Set all values to LowerCase in object
+ */
 function lowercaseObjectValues(object) {
     if (typeof object === "object") {
         for (var keys in object) {
@@ -1360,4 +1354,53 @@ function lowercaseObjectValues(object) {
         }
     }
     return object;
+}
+
+/**
+ * Get the key in the object associated with the defined value
+ * The discard parameter permit to remove part of the value string if needed
+ */
+function getKeyByValue(object, value, discard = "") {
+    if (typeof value === "string") {
+        value = value.replace(discard, "");
+    }
+    return Object.keys(object).find((key) => object[key] === value);
+}
+
+/**
+ * Generate nested Objects by splitting a sting
+ * Usages:
+ * createNestedObject(window, ['shapes', 'circle'])
+ *   Now window.shapes.circle is an empty object, ready to be used.
+ * var object = {} // Works with any object other that window too
+ * createNestedObject(object, ['shapes', 'rectangle', 'width'], 300)
+ *   Now we have: object.shapes.rectangle.width === 300
+ * createNestedObject(object, 'shapes.rectangle.height'.split('.'), 400)
+ *   Now we have: object.shapes.rectangle.height === 400
+ */
+function createNestedObject(object, keys, value) {
+    // If a value is given, remove the last name and keep it for later:
+    var lastKey = arguments.length === 3 ? keys.pop() : false;
+    // Walk the hierarchy, creating new objects where needed.
+    // If the lastKey was removed, then the last object is not set yet:
+    for (var i = 0; i < keys.length; i++) {
+        object = object[keys[i]] = object[keys[i]] || {};
+    }
+
+    // If a value was given, set it to the last name:
+    if (lastKey) object = object[lastKey] = value;
+
+    // Return the last object in the hierarchy:
+    return object;
+}
+
+/**
+ * Check if an object is empy
+ */
+function isEmptyObj(object) {
+    let isEmpty = false;
+    if (Object.keys(object).length === 0) {
+        isEmpty = true;
+    }
+    return isEmpty;
 }
