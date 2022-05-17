@@ -11,6 +11,7 @@ const desktopDir = path.join(os.homedir(), "Desktop");
 // import config from "./config.json";
 
 // General variables
+var parentPath = [];
 const variablePrefix = "$";
 const keyToDelete = "length";
 const separator = "-";
@@ -53,6 +54,8 @@ var image = sketch.Image;
 
 let designTokensList = {};
 
+let styleDictionaryArray = [];
+
 export default function() {
     // #region Color Variables
     // Sort color swatches by name. Uses `localCompare` to sort
@@ -69,8 +72,13 @@ export default function() {
             createNestedObject(colorTokens, swatch.name.split("/"), {
                 value: swatchColor,
             });
+            styleDictionaryArray.push([
+                swatch.name.substring(swatch.name.lastIndexOf("/") + 1),
+                "colors." + swatch.name.replace("/", "."),
+            ]);
         } else {
             colorTokens[swatch.name] = { value: swatchColor };
+            styleDictionaryArray.push([swatch.name, "colors." + swatch.name]);
         }
     });
     // #endregion
@@ -90,8 +98,6 @@ export default function() {
         (left, right) => left.name > right.name
     );
     var stylesString = JSON.stringify(layerStylesOrdered);
-
-    // console.log(layerStyles);
 
     // Color styles checks
     let layerStylesTokensList = {};
@@ -123,6 +129,10 @@ export default function() {
                     );
                     externalShadows.push([currentShadowName, currentShadow]);
                     shadowCounter++;
+                    styleDictionaryArray.push([
+                        currentShadowName,
+                        "shadows." + currentShadowName,
+                    ]);
                 }
             }
         }
@@ -152,6 +162,10 @@ export default function() {
                         0
                     );
                     internalShadows.push([currentShadowName, currentShadow]);
+                    styleDictionaryArray.push([
+                        currentShadowName,
+                        "inner-shadows." + currentShadowName,
+                    ]);
                     shadowCounter++;
                 }
             }
@@ -215,6 +229,10 @@ export default function() {
                         0
                     );
                     gradients.push([currentGradientName, currentGradient]);
+                    styleDictionaryArray.push([
+                        currentGradientName,
+                        "gradients." + currentGradientName,
+                    ]);
                 }
             }
         }
@@ -252,8 +270,9 @@ export default function() {
                     let color = fill.color;
                     let currentColor = setColor(color, "rgba");
                     if (checkColor(colors, currentColor)) {
+                        let currentVariable = getColor(colors, currentColor);
                         styleColors["background" + fillCount + "-color"] = {
-                            value: variablePrefix + getColor(colors, currentColor),
+                            value: setStyleDictionaryVariable(currentVariable),
                         };
                     } else {
                         styleColors["background" + fillCount + "-color"] = {
@@ -288,7 +307,7 @@ export default function() {
                             gradientName.includes(currentGradientName)
                         ) {
                             styleColors["background" + fillCount + "-color"] = {
-                                value: variablePrefix + gradientName,
+                                value: setStyleDictionaryVariable(gradientName),
                             };
                         }
                     }
@@ -352,7 +371,9 @@ export default function() {
 
                 if (checkColor(colors, currentColor)) {
                     styleBorderColors["border" + fillCount + "-color"] = {
-                        value: variablePrefix + getColor(colors, currentColor),
+                        value: setStyleDictionaryVariable(
+                            getColor(colors, currentColor)
+                        ),
                     };
                 } else {
                     styleBorderColors["border" + fillCount + "-color"] = {
@@ -367,10 +388,21 @@ export default function() {
                     "border-position",
                     currentBorderPosition
                 );
-                styleBorderPosition["border" + fillCount + "-position"] = {
-                    value: variablePrefix +
-                        "border-position-" +
+                // Add border position to styleDictionaryArray if not already there
+                if (
+                    isItemInArray(
+                        styleDictionaryArray,
+                        currentBorderPosition
+                    ) === false
+                ) {
+                    styleDictionaryArray.push([
                         currentBorderPosition,
+                        "border.positions." + currentBorderPosition,
+                    ]);
+                }
+
+                styleBorderPosition["border" + fillCount + "-position"] = {
+                    value: setStyleDictionaryVariable(currentBorderPosition),
                 };
 
                 // Size
@@ -401,11 +433,11 @@ export default function() {
 
                 if (checkShadows(externalShadows, currentShadow)) {
                     styleShadow["shadow" + shadowCount] = {
-                        value: variablePrefix +
-                            getShadow(externalShadows, currentShadow),
+                        value: setStyleDictionaryVariable(
+                            getShadow(externalShadows, currentShadow)
+                        ),
                     };
                 }
-
                 counter++;
             }
         }
@@ -428,9 +460,11 @@ export default function() {
                 setShadowDetails(currentShadow, shadow, "inner-shadow");
 
                 if (checkShadows(internalShadows, currentShadow)) {
-                    styleShadow["inner-shadow" + shadowCount] =
-                        variablePrefix +
-                        getShadow(internalShadows, currentShadow);
+                    styleShadow["inner-shadow" + shadowCount] = {
+                        value: setStyleDictionaryVariable(
+                            getShadow(internalShadows, currentShadow)
+                        ),
+                    };
                 }
 
                 counter++;
@@ -529,6 +563,10 @@ export default function() {
             );
             let fontSizeName = "font-size-" + counter.toString();
             fontSizes.push([fontSizeName, sizeValues[i]]);
+            styleDictionaryArray.push([
+                fontSizeName,
+                "font-sizes." + fontSizeName,
+            ]);
         }
     }
     // #endregion
@@ -573,18 +611,26 @@ export default function() {
             "font-family",
             currentStyleFontKey
         );
+        if (
+            isItemInArray(styleDictionaryArray, currentStyleFontKey) === false
+        ) {
+            styleDictionaryArray.push([
+                currentStyleFontKey,
+                "font-families." + currentStyleFontKey,
+            ]);
+        }
         styleFontFamily["font-family"] = {
-            value: variablePrefix + "font-family-" + currentStyleFontKey,
+            value: setStyleDictionaryVariable(currentStyleFontKey),
         };
-        // styleFontFamilyName["font-family-name"] = { value: fontFamily[0] };
         // #endregion
 
         // #region Font Size
         let currentStyleFontSize = textStyle.style.fontSize;
         styleFontSize = {
             fontSize: {
-                value: variablePrefix +
-                    getFontSize(fontSizes, currentStyleFontSize),
+                value: setStyleDictionaryVariable(
+                    getFontSize(fontSizes, currentStyleFontSize)
+                ),
             },
         };
         // #endregion
@@ -595,7 +641,9 @@ export default function() {
         // If the color already exist as a Color Variable, it should not be added
         if (checkColor(colors, currentColor)) {
             styleFontColor["text-color"] = {
-                value: variablePrefix + getColor(colors, currentColor),
+                value: setStyleDictionaryVariable(
+                    getColor(colors, currentColor)
+                ),
             };
         } else {
             createCouples(
@@ -604,8 +652,16 @@ export default function() {
                 counter.toString()
             );
             colors.push(["color" + counter.toString(), currentColor]);
+            let currentVariable = getColor(colors, currentColor);
+            if (isItemInArray(styleDictionaryArray, currentColor) === false) {
+                styleDictionaryArray.push([
+                    currentVariable,
+                    "colors." + currentVariable,
+                ]);
+            }
+
             styleFontColor["text-color"] = {
-                value: variablePrefix + getColor(colors, currentColor),
+                value: setStyleDictionaryVariable(currentVariable),
             };
             counter++;
         }
@@ -618,14 +674,24 @@ export default function() {
         // } else {
         //     styleFontWeight["font-weight"] = { value: currentStyleFontWeight };
         // }
-
+        let currentVariable =
+            "font-weight-" + currentStyleFontWeight.toString();
         createCouples(
             fontWeight, { value: currentStyleFontWeight },
-            "font-weight",
-            currentStyleFontWeight.toString()
+            currentVariable,
+            "",
+            0
         );
+
+        if (isItemInArray(styleDictionaryArray, currentVariable) === false) {
+            styleDictionaryArray.push([
+                currentVariable,
+                "font-weights." + currentVariable,
+            ]);
+        }
+
         styleFontWeight["font-weight"] = {
-            value: variablePrefix + "font-weight-" + currentStyleFontWeight,
+            value: setStyleDictionaryVariable(currentVariable),
         };
         // #endregion
 
@@ -638,11 +704,19 @@ export default function() {
                 "text-align",
                 currentStyleFontAlignment
             );
+            let currentVariable = "text-align-" + currentStyleFontAlignment;
+            if (
+                isItemInArray(styleDictionaryArray, currentVariable) === false
+            ) {
+                styleDictionaryArray.push([
+                    currentVariable,
+                    "text-alignments." + currentVariable,
+                ]);
+            }
             styleFontAlignment = setStyleToken(
                 fontAlignment,
-                currentStyleFontAlignment,
-                "text-align",
-                variablePrefix
+                setStyleDictionaryVariable(currentVariable),
+                "text-align"
             );
         } else {
             createCouples(fontAlignment, "left", "text-align", "left");
@@ -784,6 +858,7 @@ export default function() {
     if (isEmptyObj(colorTokens) === false) {
         colorsObj = { colors: colorTokens };
     }
+    // console.log(colors);
     let gradientObj = {};
     if (isEmptyObj(gradientStyles) === false) {
         gradientObj = { gradients: gradientStyles };
@@ -879,7 +954,13 @@ export default function() {
         delete designTokensList[keyToDelete];
     }
 
-    let json = JSON.stringify(designTokensList, null, 2);
+    // let objectToStringify = objectectLowerCase(designTokensList);
+    // console.log(objectToStringify);
+
+    // JSON.stringify(designTokensList, null, 2);
+
+    let json = JSON.stringify(objectectLowerCase(designTokensList), null, 2);
+
     // Finally, store the color information in a `colors.json` file:
     try {
         fs.writeFileSync(desktopDir + "/design-tokens.json", json);
@@ -1089,8 +1170,9 @@ function setShadowDetails(object, currentItem, shadowType = "") {
     let currentColor = setColor(color, "rgba");
 
     if (checkColor(colors, currentColor)) {
+        let currentVariable = getColor(colors, currentColor);
         object[shadowType + "-color"] = {
-            value: variablePrefix + getColor(colors, currentColor),
+            value: setStyleDictionaryVariable(currentVariable),
         };
     } else {
         object[shadowType + "-color"] = { value: currentColor };
@@ -1145,8 +1227,9 @@ function setGradientDetails(object, currentItem, type = "Linear", prefix = "") {
         let currentPosition = Math.round(stop.position * 100) / 100;
 
         if (checkColor(colors, currentColor)) {
+            let currentVariable = getColor(colors, currentColor);
             currentStop = Object.assign(currentStop, {
-                color: { value: prefix + getColor(colors, currentColor) },
+                color: { value: setStyleDictionaryVariable(currentVariable) },
             });
         } else {
             currentStop = Object.assign(currentStop, {
@@ -1199,4 +1282,82 @@ function isEmptyObj(object) {
         isEmpty = true;
     }
     return isEmpty;
+}
+
+/**
+ * Set the value of the referenced Token in the format of Amazon
+ * Style Dictionary.
+ * Usages:
+ * setStyleDictionaryVariable(currentVariable)
+ *  currentVariable = the current token value
+ *
+ * The function search an available couple of values in styleDictionaryArray
+ * with currentVariable as first element and return as a value the
+ * the second Element of the couple in the array.
+ * If no couple exists in styleDictionaryArray, it returns
+ * as a value currentVriable
+ */
+function setStyleDictionaryVariable(currentVariable) {
+    let styleDictionaryVariable = "";
+    // console.log(styleDictionaryArray);
+    // console.log(currentVariable);
+    for (let i = 0; i < styleDictionaryArray.length; i++) {
+        if (styleDictionaryArray[i][0] === currentVariable) {
+            styleDictionaryVariable = styleDictionaryArray[i][1];
+            break;
+        }
+    }
+    if (styleDictionaryVariable !== "" || styleDictionaryArray !== undefined) {
+        return styleDictionaryVariable;
+    } else {
+        return currentVariable;
+    }
+}
+
+function isItemInArray(array, item) {
+    for (var i = 0; i < array.length; i++) {
+        // This if statement depends on the format of your array
+        if (array[i][0] == item[0] && array[i][1] == item[1]) {
+            return true; // Found it
+        }
+    }
+    return false; // Not found
+}
+
+function objectectLowerCase(object) {
+    // Helper function for detection objects
+    const isObject = (obj) =>
+        Object.prototype.toString.call(obj) === "[object Object]";
+
+    // The entry point for recursion, iterates and maps object properties
+    const lowerCaseObjectKeys = (obj) =>
+        Object.fromEntries(Object.entries(obj).map(objectKeyMapper));
+
+    // Converts keys to lowercase, detects object values
+    // and sends them off for further conversion
+    const objectKeyMapper = ([key, val]) => [
+        key.toLowerCase(),
+        isObject(val) ? lowerCaseObjectKeys(val) : val,
+    ];
+
+    let newObject = lowerCaseObjectKeys(lowercaseObjectValues(object));
+
+    return newObject;
+}
+
+function lowercaseObjectValues(object) {
+    if (typeof object === "object") {
+        for (var keys in object) {
+            if (typeof object[keys] === "object") {
+                lowercaseObjectValues(object[keys]);
+            } else {
+                let keyValue = object[keys];
+                if (typeof keyValue === "string") {
+                    keyValue = object[keys].toLowerCase();
+                    object[keys] = keyValue;
+                }
+            }
+        }
+    }
+    return object;
 }
