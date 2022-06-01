@@ -56,7 +56,7 @@ let designTokensList = {};
 
 let styleDictionaryArray = [];
 
-export default function() {
+export default function () {
     // #region Color Variables
     // Sort color swatches by name. Uses `localCompare` to sort
     // numbers properly. https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/localeCompare
@@ -382,7 +382,8 @@ export default function() {
                 // Position
                 let currentBorderPosition = border.position.toLowerCase();
                 createCouples(
-                    borderPositions, { value: currentBorderPosition },
+                    borderPositions,
+                    { value: currentBorderPosition },
                     "border-position",
                     currentBorderPosition
                 );
@@ -541,7 +542,8 @@ export default function() {
     for (const textStyleForSize of textStyles) {
         let size = textStyleForSize.style.fontSize;
         if (sizeValues.length > 0) {
-            if (sizeValues.indexOf(size) > -1) {} else {
+            if (sizeValues.indexOf(size) > -1) {
+            } else {
                 sizeValues.push(size);
             }
         } else {
@@ -549,13 +551,14 @@ export default function() {
         }
     }
     if (sizeValues.length > 0) {
-        sizeValues = sizeValues.sort(function(a, b) {
+        sizeValues = sizeValues.sort(function (a, b) {
             return a - b;
         });
         for (let i = 0; i < sizeValues.length; i++) {
             let counter = i + 1;
             createCouples(
-                fontSize, { value: sizeValues[i] },
+                fontSize,
+                { value: sizeValues[i] },
                 "font-size",
                 counter.toString()
             );
@@ -605,7 +608,8 @@ export default function() {
         }
         fontFamily = currentStyleFont.split("-");
         createCouples(
-            fonts, { value: currentStyleFont },
+            fonts,
+            { value: currentStyleFont },
             "font-family",
             currentStyleFontKey
         );
@@ -645,7 +649,8 @@ export default function() {
             };
         } else {
             createCouples(
-                colorTokens, { value: currentColor },
+                colorTokens,
+                { value: currentColor },
                 "color",
                 counter.toString()
             );
@@ -675,7 +680,8 @@ export default function() {
         let currentVariable =
             "font-weight-" + currentStyleFontWeight.toString();
         createCouples(
-            fontWeight, { value: currentStyleFontWeight },
+            fontWeight,
+            { value: currentStyleFontWeight },
             currentVariable,
             "",
             0
@@ -846,7 +852,7 @@ export default function() {
     // 1. Order the Gradient Styles Descending by Key
     gradientStyles = Object.keys(gradientStyles)
         .sort()
-        .reduce(function(result, key) {
+        .reduce(function (result, key) {
             result[key] = gradientStyles[key];
             return result;
         }, {});
@@ -962,7 +968,10 @@ export default function() {
     // Finally, store the color information in a `colors.json` file:
     try {
         fs.writeFileSync(desktopDir + "/design-tokens.json", json);
-        sketch.UI.message("✅ Design Tokens extraction complete");
+        sketch.UI.alert(
+            "Design Tokens Exported",
+            "👀 The JSON file was saved to your Desktop"
+        );
     } catch (error) {
         sketch.UI.message(
             "⛔️ There was an error writing your file on Desktop"
