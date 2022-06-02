@@ -52,6 +52,13 @@ var data = document.sketchObject.documentData();
 var image = sketch.Image;
 // #endregion
 
+var documentName = "design-tokens";
+if (document.path) {
+    documentName = normalizePaths(document.path.split("/").reverse()[0]);
+    documentName = documentName.replace(".sketchcloud", "");
+    documentName = documentName.replace(".sketch", "");
+}
+
 let designTokensList = {};
 
 let styleDictionaryArray = [];
@@ -964,14 +971,15 @@ export default function () {
     // JSON.stringify(designTokensList, null, 2);
 
     let json = JSON.stringify(objectectLowerCase(designTokensList), null, 2);
+    let jsonName = "design-tokens_" + documentName + ".json";
 
     // Finally, store the color information in a `colors.json` file:
     try {
-        fs.writeFileSync(desktopDir + "/design-tokens.json", json);
-        sketch.UI.alert(
-            "Design Tokens Exported",
-            "👀 The JSON file was saved to your Desktop"
-        );
+        fs.writeFileSync(desktopDir + "/" + jsonName, json);
+        let message = "👀 The JSON file:" + "\n\n";
+        message += jsonName + "\n\n";
+        message += "was saved to your Desktop";
+        sketch.UI.alert("Design Tokens Exported", message);
     } catch (error) {
         sketch.UI.message(
             "⛔️ There was an error writing your file on Desktop"
@@ -1412,4 +1420,17 @@ function isEmptyObj(object) {
         isEmpty = true;
     }
     return isEmpty;
+}
+
+/**
+ * Normalize a file path or name
+ */
+function normalizePaths(path) {
+    path = path.replace(/\s/g, "-");
+    path = path.replace(/\_+/g, "-");
+    path = path.replace(/\/+/g, "-");
+    path = path.replace(/%20+/g, "-");
+    path = path.replace(/\-+/g, "-").toLowerCase();
+
+    return path;
 }
