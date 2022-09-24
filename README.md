@@ -20,19 +20,25 @@ All the references to an existent token is defined with a `$` sign:
 For example:
 
 ```
-"Black": {
-  "background-color": {
-    "value": "$Black"
+"layer-styles": {
+  "icons": {
+    "dark": {
+      "background-color": {
+        "value": "colors.black"
+      }
+    }
   }
 },
 ```
 
-`$Black` refers to a previously generated Color Token defined into the `colors` section like:
+`colors.Black` refers to a previously generated Color Token defined into the `colors` section like:
 
 ```
-"Black": {
-  "value": "rgba(0, 0, 0, 1)"
-},
+"colors": {
+    "black": {
+      "value": "rgba(0, 0, 0, 1)"
+    }
+}
 ```
 
 ## Aknowledgments
